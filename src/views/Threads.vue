@@ -1,11 +1,13 @@
 <template>
   <div>
     <b-container>
+      <p>{{threadsCount}}</p>
       <b-list-group>
         <b-list-group-item
           class="d-flex justify-content-between align-items-center pointer"
-          v-for="(item, index) in items"
-          :key="index"
+          v-for="item in items"
+          :key="item.id"
+          v-on:click="goTo(item.id)"
         >
           <div class="d-flex justify-content-start w-75">
             <div class="d-none d-md-block">
@@ -78,6 +80,9 @@ export default Vue.extend({
     }
   },
   methods: {
+    goTo(id: string){
+      this.$router.push({path: `thread/${id}`})
+    },
     async getNewPage(page:number){
       await getData(page, this.$data.size, this)
     }

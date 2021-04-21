@@ -1,3 +1,4 @@
+import { Thread } from "@/models/thread.model";
 import axios from "axios";
 
 export async function threadsWithRelations(
@@ -40,4 +41,40 @@ export async function threadCount(): Promise<number> {
     }`,
   });
   return result.data.data.threadCount;
+}
+
+export async function threadWithRelations(id: string): Promise<Thread> {
+  const result = await axios.post("http://localhost:4000", {
+    query: `query Query($threadWithRelationId: String!) {
+      threadWithRelation(id: $threadWithRelationId) {
+        id
+        title
+        description
+        author {
+          id
+          username
+          email
+        }
+        parentTread {
+          id
+          title
+          description
+        }
+        subThreads {
+          id
+          title
+          description
+        }
+        messages {
+          id
+          text
+          date
+        }
+        isClosed
+        isArchived
+      }
+    }`,
+    variables: `{"threadWithRelationId": "${id}"}`,
+  });
+  return result.data.data.threadWithRelation;
 }
