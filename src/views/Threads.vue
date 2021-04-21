@@ -24,7 +24,7 @@
             </div>
           </div>
           <div class="d-flex flex-column justify-content-between">
-            <div class="text-right">
+            <div class="text-right" v-if="item.messages">
               <div>
                 <span class="d-none d-md-inline">messages</span>
                 <b-badge class="ml-2" variant="primary" pill>{{
@@ -32,7 +32,7 @@
                 }}</b-badge>
               </div>
             </div>
-            <div class="text-right">
+            <div class="text-right" v-if="item.subThreads">
               <div>
                 <span class="d-none d-md-inline">sub-threads</span>
                 <b-badge class="ml-2" variant="success" pill>{{
@@ -44,7 +44,7 @@
         </b-list-group-item>
       </b-list-group>
       <div class="d-flex justify-content-center mt-5">
-        <b-pagination :total-rows="4" :per-page="10"></b-pagination>
+        <b-pagination v-model="pageNumber" :total-rows="threadsCount" :per-page="size" v-on:change="getNewPage"></b-pagination>
       </div>
     </b-container>
   </div>
@@ -56,56 +56,35 @@
 }
 </style>
 
-<script>
-export default {
+<script lang="ts">
+import Vue from 'vue'
+import {threadsWithRelations, threadCount} from "@/graphql/thread"
+import {Thread} from "@/models/thread.model"
+
+async function getData(page: number, size: number, ctx: any){  
+  const result = await threadsWithRelations(page * size - size, size);
+  const thread: Thread[] = result;
+  ctx.$data.items = thread;
+}
+
+export default Vue.extend({
   name: "Threads",
-  data: function () {
+  data: function() {
     return {
-      items: [
-        {
-          id: 1,
-          title: "How to do nothing",
-          description: "lorem ooor sssa md ppprs lllas  ss s ",
-          messages: [{}, {}, {}, {}],
-          subThreads: [{}, {}],
-        },
-        {
-          id: 2,
-          title: "How to do bro",
-          description: "lorem ooor sssa md ppprs",
-          messages: [{}, {}, {}, {}, {}, {}, {}],
-          subThreads: [{}, {}, {}],
-        },
-        {
-          id: 2,
-          title: "How to do bro",
-          description: "lorem ooor sssa md ppprs",
-          messages: [{}, {}, {}, {}, {}, {}, {}],
-          subThreads: [{}, {}, {}],
-        },
-        {
-          id: 2,
-          title: "How to do bro",
-          description: "lorem ooor sssa md ppprs",
-          messages: [{}, {}, {}, {}, {}, {}, {}],
-          subThreads: [{}, {}, {}],
-        },
-        {
-          id: 2,
-          title: "How to do bro",
-          description: "lorem ooor sssa md ppprs",
-          messages: [{}, {}, {}, {}, {}, {}, {}],
-          subThreads: [{}, {}, {}],
-        },
-        {
-          id: 2,
-          title: "How to do bro",
-          description: "lorem ooor sssa md ppprs",
-          messages: [{}, {}, {}, {}, {}, {}, {}],
-          subThreads: [{}, {}, {}],
-        },
-      ],
-    };
+      threadsCount: 0,
+      pageNumber: 1,
+      size: 6,
+      items: []
+    }
   },
-};
+  methods: {
+    async getNewPage(page:number){
+      await getData(page, this.$data.size, this)
+    }
+  },
+  async mounted() {
+    this.$data.threadsCount = await threadCount();
+    await getData(this.$data.pageNumber, this.$data.size, this)
+  }
+})
 </script>
