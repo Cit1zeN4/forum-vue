@@ -69,6 +69,11 @@ export async function threadWithRelations(id: string): Promise<Thread> {
           id
           text
           date
+          author {
+            id      
+            username
+            email      
+          }
         }
         isClosed
         isArchived
