@@ -7,6 +7,10 @@ import dotenv from "dotenv";
 // Import Bootstrap an BootstrapVue CSS files (order is important)
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-vue/dist/bootstrap-vue.css";
+import { createHttpLink } from "apollo-link-http";
+import { InMemoryCache } from "apollo-cache-inmemory";
+import ApolloClient from "apollo-client";
+import VueApollo from "vue-apollo";
 
 // Make BootstrapVue available throughout your project
 Vue.use(BootstrapVue);
@@ -17,8 +21,26 @@ Vue.config.productionTip = false;
 
 dotenv.config();
 
+const httpLink = createHttpLink({
+  uri: "http://localhost:4000/graphql",
+});
+
+const cache = new InMemoryCache();
+
+const apolloClient = new ApolloClient({
+  link: httpLink,
+  cache,
+});
+
+const apolloProvider = new VueApollo({
+  defaultClient: apolloClient,
+});
+
+Vue.use(VueApollo);
+
 new Vue({
   router,
   store,
+  apolloProvider,
   render: (h) => h(App),
 }).$mount("#app");
