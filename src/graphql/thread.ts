@@ -70,14 +70,14 @@ export async function threadsWithRelations(
   return result.data.data.threadsWithRelations;
 }
 
-export async function threadCount(): Promise<number> {
-  const result = await axios.post("http://localhost:4000/graphql", {
-    query: `query Query {
-      threadCount
-    }`,
-  });
-  return result.data.data.threadCount;
-}
+// export async function threadCount(): Promise<number> {
+//   const result = await axios.post("http://localhost:4000/graphql", {
+//     query: `query Query {
+//       threadCount
+//     }`,
+//   });
+//   return result.data.data.threadCount;
+// }
 
 export function mainThreadCount() {
   return gql`
