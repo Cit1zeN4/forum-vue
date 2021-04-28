@@ -1,11 +1,13 @@
 <template>
   <div>
-    <b-container>
-      <p>{{threadsCount}}</p>
+    <div v-if="$apollo.queries.threads.loading">Loading...</div>
+    <b-container v-else>
+      <p>{{ threadCount }}</p>
+      <div></div>
       <b-list-group>
         <b-list-group-item
           class="d-flex justify-content-between align-items-center pointer"
-          v-for="item in items"
+          v-for="item in threads"
           :key="item.id"
           v-on:click="goTo(item.id)"
         >
@@ -46,7 +48,11 @@
         </b-list-group-item>
       </b-list-group>
       <div class="d-flex justify-content-center mt-5">
-        <b-pagination v-model="pageNumber" :total-rows="threadsCount" :per-page="size" v-on:change="getNewPage"></b-pagination>
+        <b-pagination
+          v-model="pageNumber"
+          :total-rows="threadCount"
+          :per-page="size"
+        ></b-pagination>
       </div>
     </b-container>
   </div>
@@ -59,37 +65,58 @@
 </style>
 
 <script lang="ts">
-import Vue from 'vue'
-import {threadsWithRelations, threadCount} from "@/graphql/thread"
-import {Thread} from "@/models/thread.model"
-
-async function getData(page: number, size: number, ctx: any){  
-  const result = await threadsWithRelations(page * size - size, size);
-  const thread: Thread[] = result;
-  ctx.$data.items = thread;
-}
+import Vue from "vue";
+import {
+  mainThreadCount,
+  getThreadsQuery,
+  subscribeThreadQuery,
+} from "@/graphql/thread";
+import { saveNewThread } from "@/helpers/thread.helper";
 
 export default Vue.extend({
   name: "Threads",
-  data: function() {
+  data: function () {
     return {
-      threadsCount: 0,
+      threadCount: 0,
       pageNumber: 1,
       size: 6,
-      items: []
-    }
+      items: [],
+    };
+  },
+  apollo: {
+    threads: {
+      query: getThreadsQuery(),
+      variables() {
+        const page = this.$data.pageNumber;
+        const size = this.$data.size;
+        return {
+          threadsWithRelationsSkip: page * size - size,
+          threadsWithRelationsTake: size,
+        };
+      },
+      subscribeToMore: {
+        document: subscribeThreadQuery(),
+        updateQuery: (previousResult, { subscriptionData }) => {
+          subscriptionData.data.newThread.subThreads = [];
+          subscriptionData.data.newThread.messages = [];
+
+          saveNewThread(
+            previousResult.threadsWithRelations,
+            subscriptionData.data.newThread,
+            2
+          );
+        },
+      },
+      update: (data) => data.threadsWithRelations,
+    },
+    threadCount: {
+      query: mainThreadCount(),
+    },
   },
   methods: {
-    goTo(id: string){
-      this.$router.push({path: `thread/${id}`})
+    goTo(id: string) {
+      this.$router.push({ path: `thread/${id}` });
     },
-    async getNewPage(page:number){
-      await getData(page, this.$data.size, this)
-    }
   },
-  async mounted() {
-    this.$data.threadsCount = await threadCount();
-    await getData(this.$data.pageNumber, this.$data.size, this)
-  }
-})
+});
 </script>
