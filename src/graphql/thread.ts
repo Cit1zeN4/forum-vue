@@ -167,3 +167,29 @@ export async function threadWithRelations(id: string): Promise<Thread> {
   });
   return result.data.data.threadWithRelation;
 }
+
+export function subscribeThreadQuery() {
+  return gql`
+    subscription Subscription {
+      newThread {
+        id
+        title
+        description
+        author {
+          id
+        }
+        parentTread {
+          id
+        }
+        subThreads {
+          id
+          title
+          description
+        }
+        messages {
+          id
+        }
+      }
+    }
+  `;
+}

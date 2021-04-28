@@ -3,6 +3,7 @@
     <div v-if="$apollo.queries.threads.loading">Loading...</div>
     <b-container v-else>
       <p>{{ threadCount }}</p>
+      <div></div>
       <b-list-group>
         <b-list-group-item
           class="d-flex justify-content-between align-items-center pointer"
@@ -65,11 +66,16 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { mainThreadCount, getThreadsQuery } from "@/graphql/thread";
+import {
+  mainThreadCount,
+  getThreadsQuery,
+  subscribeThreadQuery,
+} from "@/graphql/thread";
+import { saveNewThread } from "@/helpers/thread.helper";
 
 export default Vue.extend({
   name: "Threads",
-  data: function() {
+  data: function () {
     return {
       threadCount: 0,
       pageNumber: 1,
@@ -87,6 +93,19 @@ export default Vue.extend({
           threadsWithRelationsSkip: page * size - size,
           threadsWithRelationsTake: size,
         };
+      },
+      subscribeToMore: {
+        document: subscribeThreadQuery(),
+        updateQuery: (previousResult, { subscriptionData }) => {
+          subscriptionData.data.newThread.subThreads = [];
+          subscriptionData.data.newThread.messages = [];
+
+          saveNewThread(
+            previousResult.threadsWithRelations,
+            subscriptionData.data.newThread,
+            2
+          );
+        },
       },
       update: (data) => data.threadsWithRelations,
     },

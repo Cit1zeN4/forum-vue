@@ -2,21 +2,31 @@
   <div class="container">
     <div v-if="$apollo.queries.thread.loading">Loading...</div>
     <div v-else>
-      <div class="row color">
-        <div class="col-4 pt-3">
+      <div class="row color pt-3">
+        <div class="col-10">
           <p class="text-left small-text">{{ $route.params.id }}</p>
           <h3 class="text-left">{{ thread.title }}</h3>
+        </div>
+        <div class="col-2">
+          <div class="float-right">
+            <b-icon
+              v-b-modal.modal-2
+              class="h4 pointer"
+              icon="gear-wide-connected"
+              aria-hidden="true"
+            ></b-icon>
+          </div>
         </div>
         <div class="col-12">
           <p class="text-left">{{ thread.description }}</p>
         </div>
       </div>
-      <div v-b-toggle.collapse-1 class="row color2">
+      <div v-b-toggle.collapse-1 class="row color2" v-if="colapse">
         <div class="col-12">
           <span>Collapse SubThreads</span>
         </div>
       </div>
-      <b-collapse id="collapse-1" class="mt-2" :visible="colapse">
+      <b-collapse id="collapse-1" class="mt-2" v-if="colapse">
         <h3>SubThreads</h3>
         <b-list-group class="w-100">
           <b-list-group-item
@@ -62,7 +72,7 @@
           </b-list-group-item>
         </b-list-group>
       </b-collapse>
-      <div class="row mt-2">
+      <div class="row mt-5">
         <h3 class="col-12">Messages</h3>
         <div class="w-100 d-flex justify-content-end px-3 mb-3">
           <b-button v-b-modal.modal-1 variant="outline-primary">
@@ -70,15 +80,15 @@
           </b-button>
         </div>
       </div>
-      <b-list-group class="w-100">
+      <b-list-group class="w-100 mb-4">
         <b-list-group-item
           class="d-flex justify-content-between align-items-center pointer"
-          v-for="item in thread.messages"
+          v-for="item in messages"
           :key="item.id"
         >
           <div>
             <div>
-              <h4 class="text-left">{{ item.author.username }}</h4>
+              <!--<h4 class="text-left">{{ item.author.username }}</h4>-->
             </div>
             <div>
               <p class="text-left">
@@ -86,7 +96,7 @@
               </p>
             </div>
             <div>
-              <p class="text-left">
+              <p class="mb-1 text-left">
                 {{ dateToString(item.date) }}
               </p>
             </div>
@@ -117,6 +127,45 @@
           </div>
         </b-form>
       </b-modal>
+      <b-modal id="modal-2" title="Settings" v-model="showSettingsModal">
+        <b-form>
+          <h4>Title</h4>
+          <b-form-input
+            v-model="thread.title"
+            placeholder="Enter your name"
+          ></b-form-input>
+          <h4 class="mt-3">Description</h4>
+          <b-form-textarea
+            id="textarea"
+            v-model="thread.description"
+            placeholder="Enter somthing..."
+            rows="3"
+            max-rows="6"
+            class="mt-2"
+          ></b-form-textarea>
+          <div class="mt-3 p-3 border border-danger rounded">
+            <h4>Delete</h4>
+            <p>
+              If you click this button thread will be deleted. Once clicked this
+              action cannot be undone
+            </p>
+            <div class="d-flex justify-content-end">
+              <b-button variant="danger">Delete</b-button>
+            </div>
+          </div>
+        </b-form>
+        <template #modal-footer>
+          <div class="w-100 d-flex justify-content-center">
+            <b-button
+              variant="primary"
+              size="md"
+              @click="showSettingsModal = false"
+            >
+              Save
+            </b-button>
+          </div>
+        </template>
+      </b-modal>
     </div>
   </div>
 </template>
@@ -141,13 +190,15 @@
 <script lang="ts">
 import Vue from "vue";
 import { getThreadQuery } from "@/graphql/thread";
+import { getThreadMessages, subscribeMessageQuery } from "@/graphql/message";
 
 export default Vue.extend({
   name: "Thread",
-  data: function() {
+  data: function () {
     return {
       thread: {},
       text: "text",
+      showSettingsModal: false,
     };
   },
   apollo: {
@@ -157,6 +208,23 @@ export default Vue.extend({
         return { threadWithRelationId: this.$route.params.id };
       },
       update: (data) => data.threadWithRelation,
+    },
+    messages: {
+      query: getThreadMessages(),
+      variables() {
+        return {
+          getThreadMessagesId: this.$route.params.id,
+        };
+      },
+      subscribeToMore: {
+        document: subscribeMessageQuery(),
+        updateQuery: (previousResult, { subscriptionData }) => {
+          previousResult.getThreadMessages.push(
+            subscriptionData.data.newMessage
+          );
+        },
+      },
+      update: (data) => data.getThreadMessages,
     },
   },
   computed: {
@@ -168,26 +236,14 @@ export default Vue.extend({
   methods: {
     dateToString(date: number) {
       const new_date = new Date(date);
-      return (
-        `${new_date.getDay()}.${new_date.getMonth()}.${new_date.getFullYear()} : ` +
-        `${new_date.getHours()}:${new_date.getMinutes()}`
-      );
+      return new_date.toLocaleString("en-GB");
     },
     async goTo(id: string) {
       this.$data.thread = {};
       this.$router.push({ path: `/thread/${id}` });
-      // const result = await threadWithRelations(this.$route.params.id);
-      // this.$data.thread = result;
-      // console.log("please");
-      // const result = await this.$apollo.queries.thread.refetch({
-      //   threadWithRelationId: id,
-      // });
-      // console.log(result);
     },
   },
   async mounted() {
-    // const result = await threadWithRelations(this.$route.params.id);
-    // this.$data.thread = result;
     console.log(this.$apollo.queries.thread);
   },
 });
