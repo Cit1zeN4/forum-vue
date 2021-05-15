@@ -150,7 +150,9 @@
               action cannot be undone
             </p>
             <div class="d-flex justify-content-end">
-              <b-button variant="danger">Delete</b-button>
+              <b-button variant="danger" @click="deleteThread($route.params.id)"
+                >Delete</b-button
+              >
             </div>
           </div>
         </b-form>
@@ -189,7 +191,7 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { getThreadQuery } from "@/graphql/thread";
+import { getThreadQuery, deleteThreadMutation } from "@/graphql/thread";
 import { getThreadMessages, subscribeMessageQuery } from "@/graphql/message";
 
 export default Vue.extend({
@@ -241,6 +243,17 @@ export default Vue.extend({
     async goTo(id: string) {
       this.$data.thread = {};
       this.$router.push({ path: `/thread/${id}` });
+    },
+    async deleteThread(id: string) {
+      const result = await this.$apollo.mutate({
+        mutation: deleteThreadMutation(),
+        variables: {
+          deleteThreadId: id,
+        },
+      });
+      if (result.data?.deleteThread) {
+        this.$router.push({ path: `/threads` });
+      }
     },
   },
   async mounted() {

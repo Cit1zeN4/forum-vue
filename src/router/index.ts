@@ -4,6 +4,9 @@ import Home from "../views/Home.vue";
 import Threads from "../views/Threads.vue";
 import Thread from "../views/Thread.vue";
 import About from "../views/About.vue";
+import Login from "../views/Login.vue";
+import Profile from "../views/Profile.vue";
+import { component } from "vue/types/umd";
 
 Vue.use(VueRouter);
 
@@ -30,6 +33,16 @@ const routes: Array<RouteConfig> = [
     path: "/thread/:id",
     name: "Thread",
     component: Thread,
+  },
+  {
+    path: "/login",
+    name: "Login",
+    component: Login,
+  },
+  {
+    path: "/profile/:id",
+    name: "Profile",
+    component: Profile,
   },
 ];
 

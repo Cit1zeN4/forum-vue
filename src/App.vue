@@ -1,11 +1,27 @@
 <template>
   <div id="app">
-    <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link> |
-      <router-link to="/threads">Thread</router-link>
+    <div class="mb-3">
+      <b-navbar toggleable="lg" type="dark" variant="primary">
+        <b-navbar-brand to="/">Forum3</b-navbar-brand>
+
+        <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
+
+        <b-collapse id="nav-collapse" is-nav>
+          <b-navbar-nav>
+            <b-nav-item to="/threads">Threads</b-nav-item>
+          </b-navbar-nav>
+          <b-navbar-nav v-if="!isLogin" class="ml-auto">
+            <b-nav-item to="/login">Login</b-nav-item>
+          </b-navbar-nav>
+          <b-navbar-nav v-else class="ml-auto">
+            <b-nav-item :to="`/profile/${this.$store.state.userData.userId}`"
+              >Profile</b-nav-item
+            >
+          </b-navbar-nav>
+        </b-collapse>
+      </b-navbar>
     </div>
-    <router-view/>
+    <router-view />
   </div>
 </template>
 
@@ -31,3 +47,25 @@
   color: #42b983;
 }
 </style>
+
+<script lang="ts">
+import Vue from "vue";
+import { getCookie, jwtStringToObject } from "@/helpers/jwt.helper";
+import { mapState } from "vuex";
+import store from "./store";
+
+export default Vue.extend({
+  computed: {
+    ...mapState({
+      isLogin: "isLogin",
+    }),
+  },
+  mounted() {
+    const jwt = getCookie("jwt");
+    if (jwt) {
+      store.state.userData = jwtStringToObject(jwt);
+      store.state.isLogin = true;
+    }
+  },
+});
+</script>

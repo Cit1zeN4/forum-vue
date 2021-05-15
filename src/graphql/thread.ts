@@ -193,3 +193,11 @@ export function subscribeThreadQuery() {
     }
   `;
 }
+
+export function deleteThreadMutation() {
+  return gql`
+    mutation Mutation($deleteThreadId: String!) {
+      deleteThread(id: $deleteThreadId)
+    }
+  `;
+}

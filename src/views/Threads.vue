@@ -2,8 +2,7 @@
   <div>
     <div v-if="$apollo.queries.threads.loading">Loading...</div>
     <b-container v-else>
-      <p>{{ threadCount }}</p>
-      <div></div>
+      <p>{{ $store.state.userData.userId }}</p>
       <b-list-group>
         <b-list-group-item
           class="d-flex justify-content-between align-items-center pointer"
@@ -108,9 +107,6 @@ export default Vue.extend({
         },
       },
       update: (data) => data.threadsWithRelations,
-    },
-    threadCount: {
-      query: mainThreadCount(),
     },
   },
   methods: {
